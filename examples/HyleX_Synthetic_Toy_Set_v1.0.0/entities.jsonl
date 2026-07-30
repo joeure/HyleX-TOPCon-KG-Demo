@@ -1,0 +1,5 @@
+{"id":"toy:process-seed-pass","label":"Toy seed-layer pass","type":"Process","source_doc_id":"synthetic-coating-note","source_chunk_id":"toy:chunk-1"}
+{"id":"toy:process-cure","label":"Toy cure step","type":"Process","source_doc_id":"synthetic-coating-note","source_chunk_id":"toy:chunk-1"}
+{"id":"toy:material-silica","label":"ToySilica-A","type":"Material","source_doc_id":"synthetic-coating-note","source_chunk_id":"toy:chunk-1"}
+{"id":"toy:parameter-temperature","label":"Toy cure temperature","type":"Parameter","source_doc_id":"synthetic-coating-note","source_chunk_id":"toy:chunk-2"}
+{"id":"toy:property-hardness","label":"Toy film hardness","type":"Property","source_doc_id":"synthetic-coating-note","source_chunk_id":"toy:chunk-2"}

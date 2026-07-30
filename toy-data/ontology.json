@@ -1,0 +1,11 @@
+{
+  "ontology_version": "synthetic_ontology_v1",
+  "concepts": [
+    {"id": "toy:Process", "label": "Process"},
+    {"id": "toy:Material", "label": "Material"},
+    {"id": "toy:Parameter", "label": "Parameter"},
+    {"id": "toy:Property", "label": "Property"},
+    {"id": "toy:Evidence", "label": "Evidence"}
+  ],
+  "relations": ["USES", "HAS_PARAMETER", "AFFECTS", "SUPPORTED_BY"]
+}

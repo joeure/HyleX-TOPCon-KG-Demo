@@ -1,0 +1,3 @@
+{"id":"toy:rel-uses","subject":"toy:process-seed-pass","predicate":"USES","object":"toy:material-silica","evidence_id":"toy:evidence-1","source_doc_id":"synthetic-coating-note","source_chunk_id":"toy:chunk-1"}
+{"id":"toy:rel-parameter","subject":"toy:process-cure","predicate":"HAS_PARAMETER","object":"toy:parameter-temperature","evidence_id":"toy:evidence-2","source_doc_id":"synthetic-coating-note","source_chunk_id":"toy:chunk-2"}
+{"id":"toy:rel-affects","subject":"toy:parameter-temperature","predicate":"AFFECTS","object":"toy:property-hardness","evidence_id":"toy:evidence-2","source_doc_id":"synthetic-coating-note","source_chunk_id":"toy:chunk-2"}

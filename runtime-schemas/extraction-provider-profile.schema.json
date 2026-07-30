@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["profile_id", "provider_type", "model_id", "credential_alias"],
+  "properties": {
+    "profile_id": {"type": "string", "pattern": "^[a-z][a-z0-9._-]{1,63}$"},
+    "provider_type": {"type": "string"},
+    "model_id": {"type": "string"},
+    "credential_alias": {"type": "string"}
+  },
+  "additionalProperties": true
+}

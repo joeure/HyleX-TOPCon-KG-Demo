@@ -1,0 +1,39 @@
+{
+  "spec_version": "kg-query-provider-set/v0.3",
+  "provider_set_id": "runtime_query_provider",
+  "label": "Runtime Query Provider",
+  "description": "Operator-supplied provider for evaluation",
+  "providers": [
+    {
+      "provider_id": "runtime_provider",
+      "provider_type": "openai-compatible",
+      "base_url": "https://YOUR_PROVIDER_BASE_URL/v1",
+      "credential_alias": "runtime-query-key",
+      "timeout_seconds": 120
+    }
+  ],
+  "models": [
+    {
+      "answer_model_id": "runtime_answer",
+      "provider_id": "runtime_provider",
+      "label": "Runtime Answer Model",
+      "model": "YOUR_QUERY_MODEL_ID",
+      "capabilities": {
+        "chat": true,
+        "tools": false,
+        "required_tool_choice": false
+      }
+    }
+  ],
+  "default_answer_model_id": "runtime_answer",
+  "execution_policy": {
+    "mode": "deterministic",
+    "require_first_tool_call": false,
+    "allowed_tools": [],
+    "max_model_turns": 1,
+    "max_tool_calls": 0,
+    "max_parallel_tool_calls": 1,
+    "max_context_chars": 24000,
+    "default_trace_level": "summary"
+  }
+}

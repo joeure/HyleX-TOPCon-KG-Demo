@@ -1,0 +1,2 @@
+{"embedding_id":"toy:embedding-chunk-1","chunk_id":"toy:chunk-1","model":"local-hash-demo","dimensions":8,"vector":[0.125,0.375,0.625,0.875,0.25,0.5,0.75,1.0],"generator":"deterministic demonstration vector; not a provider output"}
+{"embedding_id":"toy:embedding-chunk-2","chunk_id":"toy:chunk-2","model":"local-hash-demo","dimensions":8,"vector":[0.875,0.625,0.375,0.125,1.0,0.75,0.5,0.25],"generator":"deterministic demonstration vector; not a provider output"}

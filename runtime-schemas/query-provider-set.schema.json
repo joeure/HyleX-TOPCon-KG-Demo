@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["spec_version", "provider_set_id", "label", "providers", "models", "default_answer_model_id", "execution_policy"],
+  "properties": {
+    "spec_version": {"const": "kg-query-provider-set/v0.3"},
+    "provider_set_id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9._-]{0,127}$"},
+    "label": {"type": "string", "minLength": 1},
+    "providers": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+    "models": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+    "default_answer_model_id": {"type": "string"},
+    "execution_policy": {
+      "type": "object",
+      "required": ["mode", "require_first_tool_call", "allowed_tools", "max_model_turns", "max_tool_calls"],
+      "properties": {
+        "mode": {"const": "deterministic"},
+        "require_first_tool_call": {"const": false},
+        "allowed_tools": {"type": "array", "maxItems": 0},
+        "max_model_turns": {"const": 1},
+        "max_tool_calls": {"const": 0}
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

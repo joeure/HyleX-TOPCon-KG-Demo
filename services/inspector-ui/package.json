@@ -1,0 +1,38 @@
+{
+  "name": "coating-kg-inspector-ui",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "node scripts/smoke.mjs",
+    "screenshot": "node scripts/screenshots.mjs",
+    "screenshot:ci": "VITE_USE_FIXTURES=true node scripts/screenshots.mjs",
+    "screenshot:watch": "node scripts/screenshots.mjs --watch",
+    "screenshot:real": "node scripts/screenshots.mjs --real",
+    "screenshot:real:login": "node scripts/screenshots.mjs --real --manual-login",
+    "screenshot:real:watch": "node scripts/screenshots.mjs --real --watch"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "3d-force-graph": "^1.80.0",
+    "d3-force": "^3.0.0",
+    "d3-force-3d": "^3.0.6",
+    "lucide-react": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "three": "^0.185.1",
+    "typescript": "latest",
+    "vite": "latest"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@types/d3-force": "^3.0.10",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@types/three": "^0.185.1"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "dataset_id": "synthetic_toy_v1",
+  "synthetic_only": true,
+  "snapshot_id": "toy_snapshot_v1",
+  "ontology_version": "synthetic_ontology_v1",
+  "source_files": ["source/synthetic-coating-note.md"],
+  "derived_files": ["chunks.jsonl", "embeddings.jsonl", "ontology.json", "entities.jsonl", "relations.jsonl"],
+  "provenance_policy": "Every entity and relation points to a synthetic document and chunk."
+}

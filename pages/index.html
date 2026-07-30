@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HyleX TOPCon Knowledge Demo</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">HyleX · TOPCon Knowledge Graph</p>
+      <h1>从文档到可追溯知识</h1>
+      <p class="lead">这是公开展示页。交互式 Inspector、用户注册、Provider 配置和文档上传均在独立 VPS 服务上运行；本页面不收集密码、API Key 或上传文件。</p>
+      <div class="actions"><a class="primary" href="#toy">查看 Synthetic Toy</a><a class="secondary" href="https://app-demo.example.invalid">Online Demo preparing</a></div>
+      <section id="toy"><h2>Synthetic Toy Universe</h2><p>示例数据完全虚构，仅用于展示 Chunks、Ontology、实体、关系与 Evidence 的连接方式。</p><div id="stats" class="stats"></div><pre id="preview">正在载入 Toy 数据…</pre></section>
+      <section><h2>公开边界</h2><ul><li>GitHub Pages 只托管静态展示内容。</li><li>后端运行在隔离 VPS 栈中，Core、Query 和 Gateway 不公开源码。</li><li>评委注册需一次性邀请码；Provider 由评委自行提供，初始白名单为空。</li><li>公开账户只能查看 Toy Universe，并提交自己的候选文档；不能 Audit、Approve 或 Publish。</li></ul></section>
+    </main>
+    <script src="./toy-viewer.js"></script>
+  </body>
+</html>

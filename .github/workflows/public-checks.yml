@@ -1,0 +1,43 @@
+name: public-checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  inspector-and-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out public repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: services/inspector-ui/package-lock.json
+
+      - name: Install Inspector dependencies
+        run: npm ci
+        working-directory: services/inspector-ui
+
+      - name: Typecheck Inspector
+        run: npm run typecheck
+        working-directory: services/inspector-ui
+
+      - name: Build Inspector
+        run: npm run build
+        working-directory: services/inspector-ui
+
+      - name: Check public boundary
+        run: |
+          test -z "$(find . -type f \( -name '*.py' -o -name '*.pyc' -o -name '*.tar' -o -name '*.tar.zst' \) -not -path './examples/*' -print)"
+          test -z "$(find . -name '.DS_Store' -o -name 'node_modules' -o -name 'dist')"
+          ! rg -n --hidden --glob '!.git/**' --glob '!.github/workflows/public-checks.yml' '(sk-[A-Za-z0-9]{20,}|115\\.159\\.101\\.52|/opt/coating-kg-poc|password=[^ ]+)' .
+      - name: Check synthetic data parses
+        run: |
+          node -e "for (const f of ['toy-data/chunks.jsonl','toy-data/entities.jsonl','toy-data/relations.jsonl','toy-data/embeddings.jsonl']) require('fs').readFileSync(f,'utf8').trim().split(/\\n+/).forEach(JSON.parse)"

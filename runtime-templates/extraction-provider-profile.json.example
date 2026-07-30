@@ -1,0 +1,7 @@
+{
+  "profile_id": "runtime-extraction-profile",
+  "provider_type": "openai-compatible",
+  "base_url": "https://YOUR_PROVIDER_BASE_URL/v1",
+  "model_id": "YOUR_EXTRACTION_MODEL_ID",
+  "credential_alias": "runtime-extraction-key"
+}
