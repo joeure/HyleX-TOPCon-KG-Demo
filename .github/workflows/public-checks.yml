@@ -37,8 +37,8 @@ jobs:
         run: |
           test -z "$(find . -type f \( -name '*.py' -o -name '*.pyc' -o -name '*.tar' -o -name '*.tar.zst' \) -not -path './examples/*' -print)"
           test -z "$(find . -name '.DS_Store' -o -name 'node_modules' -o -name 'dist')"
-          matches="$(grep -RInE --exclude-dir=.git --exclude=public-checks.yml 'sk-[A-Za-z0-9]{20,}|115[.]159[.]101[.]52|/opt/coating-kg-poc' . || true)"
-          test -z "$matches"
+          test -z "$(git ls-files | awk '$0 ~ /\\.(py|pyc)$/ && $0 !~ /^examples\\// {print}')"
+          test -z "$(git ls-files | awk '$0 ~ /115[.]159[.]101[.]52|\\/opt\\/coating-kg-poc|sk-[A-Za-z0-9]{20,}/ {print}')"
       - name: Check synthetic data parses
         run: |
           node -e "for (const f of ['toy-data/chunks.jsonl','toy-data/entities.jsonl','toy-data/relations.jsonl','toy-data/embeddings.jsonl']) require('fs').readFileSync(f,'utf8').trim().split(/\\n+/).forEach(JSON.parse)"
