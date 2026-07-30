@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Globe2, Moon, Sun, UserRound } from "lucide-react";
+import { Globe2, LogOut, Moon, Sun, UserRound } from "lucide-react";
 import { fixtureGateway, type UiGatewayClient } from "../api/ui-gateway";
 import { createHttpUiGatewayClient } from "../api/http-ui-gateway";
 import type { UniverseView } from "../domain/universe";
@@ -57,13 +57,22 @@ export default function App() {
       });
     }
   };
+  const signOut = async () => {
+    try {
+      await portalClient.logout();
+      setAuthenticated(false);
+      setView(null);
+    } catch (cause) {
+      setPreferenceError(cause instanceof Error ? cause.message : "Logout failed");
+    }
+  };
   useEffect(() => { const shortcuts = (event: KeyboardEvent) => { if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return; const mode = { "1": "universe", "2": "query", "3": "ingestion" }[event.key] as PortalPreferences["mode"] | undefined; if (mode) setPreference("mode", mode); }; window.addEventListener("keydown", shortcuts); return () => window.removeEventListener("keydown", shortcuts); });
   if (remoteGatewayEnabled && authReady && !authenticated) return <div className="portal"><SpaceBackdrop /><InspectorLogin locale={preferences.locale} client={portalClient} onSuccess={() => { setAuthenticated(true); setAuthReady(true); void portalClient.getPreferences().then((value) => { setPreferences(value); setPreferenceRevision(value.revision); }); void portalClient.getUniverse().then(setView); }} /></div>;
   if (remoteGatewayEnabled && !authReady) return <div className="portal"><SpaceBackdrop /><main className="login-layout"><div className="login-loading">{t.online}…</div></main></div>;
   return <div className="portal" data-testid="inspector-dashboard"><SpaceBackdrop /><div className="portal__content">
     <header className="topbar"><div className="brand"><div className="brand-mark"><Globe2 size={20} /></div><div className="brand-copy"><span className="eyebrow">{t.portal}</span><span className="brand-title">KG-OS · Coating</span></div></div>
       <nav className="mode-switcher" aria-label="Portal modes">{modes.map((mode) => <button key={mode.id} className={`mode-button ${activeMode.id === mode.id ? "active" : ""}`} onClick={() => setPreference("mode", mode.id)}>{preferences.locale === "zh-CN" ? mode.zh : mode.en}</button>)}</nav>
-      <div className="topbar__actions"><button className="language-button" onClick={() => setPreference("locale", preferences.locale === "zh-CN" ? "en-US" : "zh-CN")} aria-label={t.language}><Globe2 size={15} /><span>{preferences.locale === "zh-CN" ? "中" : "EN"}</span></button><button className="icon-button" onClick={() => setPreference("theme", preferences.theme === "dark" ? "light" : "dark")} aria-label={t.theme}>{preferences.theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}</button><span className="user-chip"><UserRound size={14} /> {t.userLabel}</span></div>
+      <div className="topbar__actions"><button className="language-button" onClick={() => setPreference("locale", preferences.locale === "zh-CN" ? "en-US" : "zh-CN")} aria-label={t.language}><Globe2 size={15} /><span>{preferences.locale === "zh-CN" ? "中" : "EN"}</span></button><button className="icon-button" onClick={() => setPreference("theme", preferences.theme === "dark" ? "light" : "dark")} aria-label={t.theme}>{preferences.theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}</button><span className="user-chip"><UserRound size={14} /> {t.userLabel}</span>{remoteGatewayEnabled && <button className="language-button" onClick={() => void signOut()} aria-label={preferences.locale === "zh-CN" ? "退出" : "Sign out"}><LogOut size={15} /><span>{preferences.locale === "zh-CN" ? "退出" : "Sign out"}</span></button>}</div>
     </header>
     {preferenceError && <div className="login-error" role="status">{preferenceError}</div>}
     {preferences.mode === "universe" && view ? <UniverseExplorer client={portalClient} initialView={view} /> : preferences.mode === "query" ? <QuerySearchShell locale={preferences.locale} client={portalClient} /> : preferences.mode === "ingestion" ? <IngestionWizard locale={preferences.locale} client={portalClient} /> : <main className="login-layout"><div className="login-loading">{t.online}…</div></main>}
