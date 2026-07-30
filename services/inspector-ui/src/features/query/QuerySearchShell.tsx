@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Archive, ArrowUp, ChevronDown, FileText, MessageCircle, Plus, Search, Sparkles, X } from "lucide-react";
+import { Archive, ArrowUp, ChevronDown, FileText, KeyRound, MessageCircle, Plus, Search, Settings2, Sparkles, X } from "lucide-react";
 import type { Locale } from "../../app/modes";
 import type { QueryConversation, QueryOptions, QueryRun } from "../../domain/query";
-import type { InspectorCapabilities, UiGatewayClient } from "../../api/ui-gateway";
+import type { InspectorCapabilities, ProviderSessionState, UiGatewayClient } from "../../api/ui-gateway";
 import { zhCN } from "../../i18n/zh-CN";
 import { enUS } from "../../i18n/en-US";
 
@@ -77,12 +77,19 @@ export function QuerySearchShell({ locale, client }: Props) {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [evidence, setEvidence] = useState<EvidenceState>(null);
   const [thinkingFrame, setThinkingFrame] = useState(0);
+  const [providerSession, setProviderSession] = useState<ProviderSessionState | null>(null);
+  const [providerPanelOpen, setProviderPanelOpen] = useState(false);
+  const [providerPurpose, setProviderPurpose] = useState<"query" | "extraction">("query");
+  const [providerType, setProviderType] = useState("openai-compatible");
+  const [providerUrl, setProviderUrl] = useState("");
+  const [providerModel, setProviderModel] = useState("");
+  const [providerKey, setProviderKey] = useState("");
   const idempotencyKey = useRef<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
-    void Promise.all([client.getQueryOptions(), client.listConversations(), client.getCapabilities()]).then(([nextOptions, nextConversations, nextCapabilities]) => {
+    void Promise.all([client.getQueryOptions(), client.listConversations(), client.getCapabilities(), client.getProviderSession()]).then(([nextOptions, nextConversations, nextCapabilities, nextProviderSession]) => {
       if (cancelled) return;
       const first = nextOptions.provider_sets[0];
       setOptions(nextOptions);
@@ -91,9 +98,41 @@ export function QuerySearchShell({ locale, client }: Props) {
       setSelectedProviderId(first?.provider_set_id ?? "");
       setSelectedModelId(first?.default_answer_model_id ?? first?.models?.[0]?.answer_model_id ?? "default");
       setCapabilities(nextCapabilities);
+      setProviderSession(nextProviderSession);
     }).catch(() => { if (!cancelled) setError(t.queryUnavailable); });
     return () => { cancelled = true; };
   }, [client, locale]);
+
+  const refreshProviderState = async () => {
+    const [nextOptions, nextCapabilities, nextProviderSession] = await Promise.all([client.getQueryOptions(), client.getCapabilities(), client.getProviderSession()]);
+    setOptions(nextOptions);
+    setCapabilities(nextCapabilities);
+    setProviderSession(nextProviderSession);
+    const first = nextOptions.provider_sets[0];
+    setSelectedProviderId(first?.provider_set_id ?? "");
+    setSelectedModelId(first?.default_answer_model_id ?? first?.models?.[0]?.answer_model_id ?? "default");
+  };
+
+  const saveProvider = async () => {
+    setError("");
+    try {
+      await client.saveProviderSession(providerPurpose, { provider_type: providerType, base_url: providerUrl.trim(), model_id: providerModel.trim(), api_key: providerKey });
+      setProviderKey("");
+      await refreshProviderState();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Provider 配置失败");
+    }
+  };
+
+  const removeProvider = async () => {
+    setError("");
+    try {
+      await client.deleteProviderSession(providerPurpose);
+      await refreshProviderState();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Provider 删除失败");
+    }
+  };
 
   const provider = useMemo(
     () => options?.provider_sets.find((item) => item.provider_set_id === selectedProviderId) ?? options?.provider_sets[0],
@@ -226,6 +265,8 @@ export function QuerySearchShell({ locale, client }: Props) {
   const developerConsoleUrl = import.meta.env.VITE_DEVELOPER_CONSOLE_URL ?? `${window.location.protocol}//${window.location.hostname}:8501`;
   const lastAssistantIndex = messages.reduce((latest, message, index) => message.role === "assistant" ? index : latest, -1);
   const ThinkingIcon = THINKING_ICONS[thinkingFrame];
+  const isPublicDemo = import.meta.env.VITE_PUBLIC_DEMO === "true";
+  const activeProvider = providerSession?.[providerPurpose];
 
   return <main className={`ask-layout ${evidence ? "with-evidence" : ""}`} data-testid="query-shell" data-conversing={conversing}>
     <section className="ask-panel">
@@ -248,7 +289,21 @@ export function QuerySearchShell({ locale, client }: Props) {
           </div>}
         </div>
         {active && conversing && <button type="button" className="icon-button" onClick={() => void archive()} aria-label={t.archiveConversation}><Archive size={14} /></button>}
+        {isPublicDemo && <button type="button" className="icon-button" onClick={() => setProviderPanelOpen((value) => !value)} aria-label="Provider settings"><Settings2 size={14} /></button>}
       </div>
+      {isPublicDemo && providerPanelOpen && <div className="provider-panel" role="region" aria-label="Provider settings">
+        <div className="provider-panel__title"><KeyRound size={14} /> Provider Session</div>
+        <p className="composer-hint">Provider 配置仅保存在当前 Session；API Key 不会写入浏览器或服务器数据库。</p>
+        <div className="provider-panel__tabs">
+          {(["query", "extraction"] as const).map((purpose) => <button key={purpose} type="button" className={providerPurpose === purpose ? "active" : ""} onClick={() => setProviderPurpose(purpose)}>{purpose === "query" ? "Query" : "Extraction"}</button>)}
+        </div>
+        {activeProvider && <div className="composer-hint">已配置：{activeProvider.masked_host} / {activeProvider.model_label}</div>}
+        <label>Provider type<select value={providerType} onChange={(event) => setProviderType(event.target.value)}><option value="openai-compatible">OpenAI-compatible</option></select></label>
+        <label>Base URL<input value={providerUrl} onChange={(event) => setProviderUrl(event.target.value)} placeholder="https://provider.example/v1" autoComplete="off" /></label>
+        <label>Model ID<input value={providerModel} onChange={(event) => setProviderModel(event.target.value)} placeholder="model-id" autoComplete="off" /></label>
+        <label>API Key<input type="password" value={providerKey} onChange={(event) => setProviderKey(event.target.value)} placeholder="仅本次提交使用" autoComplete="new-password" /></label>
+        <div className="provider-panel__actions"><button type="button" className="composer-send" onClick={() => void saveProvider()} disabled={!providerUrl || !providerModel || !providerKey}>保存</button>{activeProvider && <button type="button" className="inline-action" onClick={() => void removeProvider()}>删除当前配置</button>}</div>
+      </div>}
       {!conversing && <div className="ask-heading">
         <span className="eyebrow"><Sparkles size={12} /> {t.ask}</span>
         <h1>{t.ask}</h1>

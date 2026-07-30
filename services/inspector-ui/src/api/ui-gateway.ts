@@ -7,6 +7,8 @@ import type { IngestionBatch, IngestionReview } from "../domain/ingestion";
 export type UiIdentity = { userId: "demo"; role: "inspector_demo" };
 export type UiSession = { user?: { user_id: string; role: string; allowed_frontends: string[] }; must_change_password?: boolean };
 export type InspectorCapabilities = { universe: { enabled: boolean }; evidence: { enabled: boolean }; ingestion: { enabled: boolean; provider_required_for_extraction?: boolean }; query: { enabled: boolean; provider_required?: boolean; reason?: string } };
+export type ProviderSessionProfile = { configured: boolean; provider_type?: string; masked_host?: string; model_label?: string; expires_at?: string };
+export type ProviderSessionState = { query: ProviderSessionProfile | null; extraction: ProviderSessionProfile | null };
 export type UniverseSearchResult = { id: string; kind: string; label: string; description: string; score?: number; conceptId?: string; predicate?: string; snapshotId: string };
 
 export interface UiGatewayClient {
@@ -25,6 +27,9 @@ export interface UiGatewayClient {
   savePreferences(preferences: PortalPreferences & { revision: number }): Promise<PortalPreferences & { revision: number }>;
   getQueryOptions(): Promise<QueryOptions>;
   getCapabilities(): Promise<InspectorCapabilities>;
+  getProviderSession(): Promise<ProviderSessionState>;
+  saveProviderSession(purpose: "query" | "extraction", profile: { provider_type: string; base_url: string; model_id: string; api_key: string }): Promise<ProviderSessionProfile>;
+  deleteProviderSession(purpose: "query" | "extraction"): Promise<void>;
   createConversation(title?: string): Promise<QueryConversation>;
   listConversations(includeArchived?: boolean): Promise<QueryConversation[]>;
   getConversation(conversationId: string): Promise<QueryConversation>;
@@ -114,6 +119,9 @@ export const fixtureGateway: UiGatewayClient = {
   async savePreferences(value) { const next = { ...value, revision: value.revision + 1 }; fixturePreferences.set("demo", next); return next; },
   async getQueryOptions() { return { provider_sets: [{ provider_set_id: "fixture", label: "Fixture", execution_mode: "deterministic" }], snapshot: { snapshot_id: fixtureUniverse.snapshotId, ontology_version: fixtureUniverse.ontologyVersion } }; },
   async getCapabilities() { return { universe: { enabled: true }, evidence: { enabled: true }, ingestion: { enabled: true }, query: { enabled: true } }; },
+  async getProviderSession() { return { query: null, extraction: null }; },
+  async saveProviderSession() { return { configured: true }; },
+  async deleteProviderSession() {},
   async createConversation(title = "New conversation") { const value: QueryConversation = { conversation_id: `fixture-${Date.now()}-${fixtureConversationCounter++}`, snapshot_id: fixtureUniverse.snapshotId, title, status: "active", created_at: new Date().toISOString(), updated_at: new Date().toISOString(), upstream: { messages: [], runs: [] } }; fixtureConversations.unshift(value); return value; },
   async listConversations() { return fixtureConversations; },
   async getConversation(conversationId) { const value = fixtureConversations.find((item) => item.conversation_id === conversationId); if (!value) throw new Error("conversation_not_found"); return value; },
