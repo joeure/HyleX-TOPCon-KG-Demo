@@ -1,16 +1,16 @@
 # Public Demo 部署边界
 
-公开仓库只部署 GitHub Pages 静态展示站点。交互式 Inspector 在独立 VPS 上运行，使用私有 Core、Query、UI Gateway 镜像；这些镜像不上传 GitHub。
+公开仓库通过 GitHub Pages 部署完整 Inspector 前端。交互式 Core、Query 和 UI Gateway 在独立 VPS 上运行；后端源码、镜像和 Secret 不上传 GitHub。
 
 ## 两个入口
 
-- `https://joeure.github.io/HyleX-TOPCon-KG-Demo/`：项目介绍、截图和只读 Toy Viewer，不处理登录、Cookie、Provider、Query 或文件上传。
+- `https://joeure.github.io/HyleX-TOPCon-KG-Demo/`：完整三模式 Inspector 的公开预览；Universe 使用 Toy 数据，后端域名未启用时 Query/Ingestion 只显示准确的准备状态。
 - `https://app-demo.<your-domain>/`：后续配置的 VPS 交互应用。没有域名时仅通过 SSH 隧道访问 `127.0.0.1:18512`。
 
 ## 公网前置条件
 
 1. VPS 使用 `/opt/hylex-topcon-public`、独立 Compose project、网络、卷和 Secret。
-2. Provider 策略文件初始为 `{ "allowed_hosts": [] }`；取得评委 API 域名后原子替换该文件，不需要重新构建二进制。
+2. Provider 策略使用 `public_https` 模式，允许通过 SSRF 检查的公开 HTTPS OpenAI-compatible API；管理员可通过 `denied_hosts` 收紧范围，策略更新不需要重建服务。
 3. DNS 配置 `demo.<domain>` 指向 `joeure.github.io`，`app-demo.<domain>` 的 A 记录指向 VPS；80/443 只交给 Public Caddy。
 4. 先用 loopback 完成无 Provider 和内部 Fake Provider 验收，再开放公网。
 

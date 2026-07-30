@@ -25,7 +25,9 @@ Pages 根页面直接是完整的三模式 Inspector：Knowledge Universe、Quer
 
 ## Public Demo 边界
 
-评委使用一次性邀请码注册 `public_inspector` 账户。第一版允许符合 SSRF 防护规则的公开 HTTPS OpenAI-compatible Provider；管理员可以通过 `denied_hosts` 收紧策略。API Key 只在当前 Gateway 进程的 Session Vault 中临时保存。用户可以查看 Toy Universe、配置 Query/Extraction Provider、查询自己的会话并上传文档查看候选解析结果，但不能 Audit、Approve、Decision、Publish 或访问其他用户数据。候选数据在 24 小时后清理。
+评委使用一次性邀请码注册 `public_inspector` 账户。第一版允许符合 SSRF 防护规则的公开 HTTPS OpenAI-compatible Provider；管理员可以通过 `denied_hosts` 收紧策略。API Key 只在当前 Gateway 进程的 Session Vault 中临时保存。用户可以查看 Toy Universe、配置 Query/Extraction Provider、查询自己的会话并上传文档查看候选解析结果，但不能 Audit、Approve、Decision、Publish 或访问其他用户数据。演示环境不作为长期数据存储使用。
+
+评委的完整访问、注册、模型 API 配置、Query 与 Ingestion 操作步骤见 [`docs/USER_GUIDE_CN.md`](docs/USER_GUIDE_CN.md)。
 
 ## 许可证和数据说明
 
