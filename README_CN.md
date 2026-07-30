@@ -1,12 +1,12 @@
 # HyleX TOPCon Public Demo
 
-这是比赛 Public Demo 的公开内容仓库。它只包含 Inspector UI、GitHub Pages 展示页、完全合成的 Toy 数据和接口/数据说明；Core、Query、UI Gateway 的源码、二进制和 OCI 镜像均不在本仓库。
+这是比赛 Public Demo 的公开内容仓库。它只包含完整 Inspector UI、GitHub Pages 构建入口、完全合成的 Toy 数据和接口/数据说明；Core、Query、UI Gateway 的源码、二进制和 OCI 镜像均不在本仓库。
 
 ## 公开站点
 
 GitHub Pages 默认地址：`https://joeure.github.io/HyleX-TOPCon-KG-Demo/`
 
-Pages 只提供项目介绍、Toy Universe 浏览和截图。登录、Provider、Query 与文档上传属于独立 VPS 应用，域名准备完成前显示 `Online Demo preparing`。
+Pages 根页面直接是完整的三模式 Inspector：Knowledge Universe、Query/Search、Document Ingestion。无 VPS Gateway 时，Universe 使用 `toy_snapshot_v1` 的只读预览，Query 和 Ingestion 仍然可打开并显示 Provider/后端准备状态，不伪造成功结果。正式交互式登录、Provider、Query 和文档上传通过独立 VPS 应用提供。
 
 ## 本地查看 Inspector UI
 
@@ -25,7 +25,7 @@ Pages 只提供项目介绍、Toy Universe 浏览和截图。登录、Provider�
 
 ## Public Demo 边界
 
-评委使用一次性邀请码注册 `public_inspector` 账户。Provider 白名单初始为空，取得评委提供的正式 API 域名后再由管理员更新；API Key 只在 HTTPS 会话中临时保存。用户可以查看 Toy Universe、查询自己的会话并上传文档查看候选解析结果，但不能 Audit、Approve、Decision、Publish 或访问其他用户数据。候选数据在 24 小时后清理。
+评委使用一次性邀请码注册 `public_inspector` 账户。第一版允许符合 SSRF 防护规则的公开 HTTPS OpenAI-compatible Provider；管理员可以通过 `denied_hosts` 收紧策略。API Key 只在当前 Gateway 进程的 Session Vault 中临时保存。用户可以查看 Toy Universe、配置 Query/Extraction Provider、查询自己的会话并上传文档查看候选解析结果，但不能 Audit、Approve、Decision、Publish 或访问其他用户数据。候选数据在 24 小时后清理。
 
 ## 许可证和数据说明
 
