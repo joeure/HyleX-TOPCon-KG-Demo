@@ -25,6 +25,9 @@ export function stepForBatchStatus(status: string): WizardStep {
 
 export function IngestionWizard({ locale, client }: Props) {
   const t = locale === "zh-CN" ? zhCN : enUS;
+  const publicCopy = locale === "zh-CN"
+    ? { progress: ["上传", "处理", "候选预览", "等待处理", "完成"], queue: "我的候选", defer: "稍后查看", previewTitle: "候选结果预览", previewHint: "以下结果仅供你查看；公开用户不能执行审计、批准或发布。" }
+    : { progress: ["Upload", "Process", "Candidate preview", "Pending", "Done"], queue: "My candidates", defer: "Review later", previewTitle: "Candidate preview", previewHint: "This result is for viewing only; public users cannot audit, approve, or publish." };
   const [step, setStep] = useState<WizardStep>("upload");
   const [file, setFile] = useState<File | null>(null);
   const [batch, setBatch] = useState<IngestionBatch | null>(null);
@@ -174,14 +177,14 @@ export function IngestionWizard({ locale, client }: Props) {
       <div className="ingestion-topbar">
         <span className="eyebrow"><Sparkles size={12} /> {t.ingestionTitle}</span>
         <div className="ingestion-steps" aria-label={t.ingestionProgress}>
-          {[t.stepUpload, t.stepRun, t.stepOntology, t.stepKg, t.stepConfirm].map((label, index) => (
+          {(publicDemo ? publicCopy.progress : [t.stepUpload, t.stepRun, t.stepOntology, t.stepKg, t.stepConfirm]).map((label, index) => (
             <span key={label} className={`ingestion-step ${index + 1 === stepIndex ? "active" : index + 1 < stepIndex ? "done" : ""}`}>
               {index + 1 < stepIndex ? <CheckCircle2 size={11} /> : null} {label}
             </span>
           ))}
         </div>
         <button type="button" className="history-toggle" aria-expanded={queueOpen} onClick={() => { setQueueOpen((value) => !value); refreshDeferred(); }}>
-          <PanelRightOpen size={13} /> {t.deferredQueue}{deferred.length > 0 ? ` (${deferred.length})` : ""}
+          <PanelRightOpen size={13} /> {publicDemo ? publicCopy.queue : t.deferredQueue}{deferred.length > 0 ? ` (${deferred.length})` : ""}
         </button>
       </div>
       {error && <div className="login-error" role="alert">{error}</div>}
@@ -212,7 +215,7 @@ export function IngestionWizard({ locale, client }: Props) {
           </ul>
         </div>
         <div className="ingestion-actions">
-          <button type="button" onClick={defer}>{t.deferAudit}</button>
+          <button type="button" onClick={defer}>{publicDemo ? publicCopy.defer : t.deferAudit}</button>
         </div>
       </div>}
 
@@ -256,8 +259,8 @@ export function IngestionWizard({ locale, client }: Props) {
       </div>}
 
       {(step === "preview" || (!publicDemo && step === "confirm")) && <div className="ingestion-stage" data-testid="ingestion-confirm">
-        <h2>{step === "preview" ? t.previewTitle : t.confirmTitle}</h2>
-        <p className="ingestion-hint">{step === "preview" ? t.previewHint : t.confirmHint}</p>
+        <h2>{step === "preview" ? (publicDemo ? publicCopy.previewTitle : t.previewTitle) : t.confirmTitle}</h2>
+        <p className="ingestion-hint">{step === "preview" ? (publicDemo ? publicCopy.previewHint : t.previewHint) : t.confirmHint}</p>
         {step === "preview" && <div data-testid="ingestion-preview">{previewScene && <ReviewGraphWorkbench graph={{
           nodes: previewScene.nodes.map((node) => ({ id: node.id, label: node.label, status: node.reviewStatus })),
           edges: previewScene.edges.map((edge) => ({ id: edge.stableKey, source: edge.from, target: edge.to, label: edge.predicate, status: edge.reviewStatus })),

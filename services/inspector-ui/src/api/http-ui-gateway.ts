@@ -12,10 +12,10 @@ export function createHttpUiGatewayClient(baseUrl: string): UiGatewayClient {
     csrfToken = (await response.json() as { csrf_token: string }).csrf_token;
     return csrfToken;
   };
-  const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
+  const request = async <T>(path: string, init?: RequestInit, options: { csrf?: boolean } = {}): Promise<T> => {
     const method = (init?.method ?? "GET").toUpperCase();
     const headers: Record<string, string> = { "Content-Type": "application/json", ...(init?.headers as Record<string, string> | undefined) };
-    if (!["GET", "HEAD", "OPTIONS"].includes(method)) headers["X-CSRF-Token"] = await ensureCsrf();
+    if (options.csrf !== false && !["GET", "HEAD", "OPTIONS"].includes(method)) headers["X-CSRF-Token"] = await ensureCsrf();
     const response = await fetch(`${baseUrl.replace(/\/$/, "")}${path}`, {
       ...init,
       credentials: "include",
@@ -26,8 +26,8 @@ export function createHttpUiGatewayClient(baseUrl: string): UiGatewayClient {
     return response.json() as Promise<T>;
   };
   return {
-    login: (username, password) => request<UiSession>("/auth/login", { method: "POST", body: JSON.stringify({ username, password, frontend_id: "inspector-ui" }) }),
-    register: (inviteCode, username, password) => request<UiSession>("/auth/register", { method: "POST", body: JSON.stringify({ invite_code: inviteCode, username, password, accept_evaluation_terms: true }) }),
+    login: (username, password) => request<UiSession>("/auth/login", { method: "POST", body: JSON.stringify({ username, password, frontend_id: "inspector-ui" }) }, { csrf: false }),
+    register: (inviteCode, username, password) => request<UiSession>("/auth/register", { method: "POST", body: JSON.stringify({ invite_code: inviteCode, username, password, accept_evaluation_terms: true }) }, { csrf: false }),
     getSession: () => request<UiSession>("/auth/session?frontend_id=inspector-ui"),
     logout: () => request<void>("/auth/logout", { method: "POST" }),
     changePassword: (currentPassword, newPassword) => request<void>("/auth/password", { method: "POST", body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }) }),
