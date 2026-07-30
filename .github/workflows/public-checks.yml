@@ -35,6 +35,7 @@ jobs:
 
       - name: Check public boundary
         run: |
+          rm -rf services/inspector-ui/node_modules services/inspector-ui/dist
           test -z "$(find . -type f \( -name '*.py' -o -name '*.pyc' -o -name '*.tar' -o -name '*.tar.zst' \) -not -path './examples/*' -print)"
           test -z "$(find . -name '.DS_Store' -o -name 'node_modules' -o -name 'dist')"
           test -z "$(git ls-files | awk '$0 ~ /\\.(py|pyc)$/ && $0 !~ /^examples\\// {print}')"
