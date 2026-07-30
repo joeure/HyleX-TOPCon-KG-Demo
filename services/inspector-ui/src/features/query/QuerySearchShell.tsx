@@ -134,6 +134,27 @@ export function QuerySearchShell({ locale, client }: Props) {
     }
   };
 
+  const testProvider = async () => {
+    setError("");
+    try {
+      await client.testProviderSession(providerPurpose);
+      setError("Provider 连接测试成功");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Provider 连接测试失败");
+    }
+  };
+
+  const copyQueryProvider = async () => {
+    setError("");
+    try {
+      await client.copyQueryProviderToExtraction();
+      await refreshProviderState();
+      setProviderPurpose("extraction");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "无法复制 Query Provider");
+    }
+  };
+
   const provider = useMemo(
     () => options?.provider_sets.find((item) => item.provider_set_id === selectedProviderId) ?? options?.provider_sets[0],
     [options, selectedProviderId],
@@ -302,7 +323,7 @@ export function QuerySearchShell({ locale, client }: Props) {
         <label>Base URL<input value={providerUrl} onChange={(event) => setProviderUrl(event.target.value)} placeholder="https://provider.example/v1" autoComplete="off" /></label>
         <label>Model ID<input value={providerModel} onChange={(event) => setProviderModel(event.target.value)} placeholder="model-id" autoComplete="off" /></label>
         <label>API Key<input type="password" value={providerKey} onChange={(event) => setProviderKey(event.target.value)} placeholder="仅本次提交使用" autoComplete="new-password" /></label>
-        <div className="provider-panel__actions"><button type="button" className="composer-send" onClick={() => void saveProvider()} disabled={!providerUrl || !providerModel || !providerKey}>保存</button>{activeProvider && <button type="button" className="inline-action" onClick={() => void removeProvider()}>删除当前配置</button>}</div>
+        <div className="provider-panel__actions"><button type="button" className="composer-send" onClick={() => void saveProvider()} disabled={!providerUrl || !providerModel || !providerKey}>保存</button>{activeProvider && <button type="button" className="inline-action" onClick={() => void testProvider()}>测试连接</button>}{activeProvider && <button type="button" className="inline-action" onClick={() => void removeProvider()}>删除当前配置</button>}{providerPurpose === "extraction" && providerSession?.query && <button type="button" className="inline-action" onClick={() => void copyQueryProvider()}>复制 Query Provider</button>}</div>
       </div>}
       {!conversing && <div className="ask-heading">
         <span className="eyebrow"><Sparkles size={12} /> {t.ask}</span>
@@ -328,7 +349,7 @@ export function QuerySearchShell({ locale, client }: Props) {
         {credentialRequired && <a href={developerConsoleUrl} className="gateway-link">{t.credentialHint}</a>}
         {conflict && <button className="inline-action" onClick={() => active && void client.getConversation(active.conversation_id).then(setActive)}>{t.refreshConversation}</button>}
       </div>}
-      {capabilities && !capabilities.query.enabled && <div className="login-error" role="status">{capabilities.query.reason ?? t.noProvider}</div>}
+      {capabilities?.query.reason && <div className="login-error" role="status">{capabilities.query.reason === "provider_not_configured" ? "请先配置当前 Session 的 Query Provider。" : capabilities.query.reason}</div>}
       <div className="ask-composer">
         <textarea
           value={query}

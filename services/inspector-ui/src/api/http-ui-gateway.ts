@@ -43,6 +43,8 @@ export function createHttpUiGatewayClient(baseUrl: string): UiGatewayClient {
     getCapabilities: () => request<InspectorCapabilities>("/inspector/capabilities"),
     getProviderSession: () => request("/inspector/provider-session"),
     saveProviderSession: (purpose, profile) => request(`/inspector/provider-session/${purpose}`, { method: "PUT", body: JSON.stringify(profile) }),
+    copyQueryProviderToExtraction: () => request("/inspector/provider-session/extraction/copy-from-query", { method: "POST" }),
+    testProviderSession: (purpose) => request(`/inspector/provider-session/${purpose}/test`, { method: "POST" }),
     deleteProviderSession: (purpose) => request(`/inspector/provider-session/${purpose}`, { method: "DELETE" }).then(() => undefined),
     createConversation: (title = "") => request<QueryConversation>("/inspector/query/conversations", { method: "POST", body: JSON.stringify({ title }) }),
     listConversations: (includeArchived = false) => request<{ items: QueryConversation[] }>(`/inspector/query/conversations?include_archived=${includeArchived}`).then((value) => value.items),

@@ -6,7 +6,12 @@ import type { IngestionBatch, IngestionReview } from "../domain/ingestion";
 
 export type UiIdentity = { userId: "demo"; role: "inspector_demo" };
 export type UiSession = { user?: { user_id: string; role: string; allowed_frontends: string[] }; must_change_password?: boolean };
-export type InspectorCapabilities = { universe: { enabled: boolean }; evidence: { enabled: boolean }; ingestion: { enabled: boolean; provider_required_for_extraction?: boolean }; query: { enabled: boolean; provider_required?: boolean; reason?: string } };
+export type InspectorCapabilities = {
+  universe: { enabled: boolean; visible?: boolean; ready?: boolean };
+  evidence: { enabled: boolean; visible?: boolean; ready?: boolean };
+  ingestion: { enabled: boolean; visible?: boolean; ready?: boolean; provider_required_for_extraction?: boolean };
+  query: { enabled: boolean; visible?: boolean; ready?: boolean; provider_required?: boolean; provider_configured?: boolean; reason?: string };
+};
 export type ProviderSessionProfile = { configured: boolean; provider_type?: string; masked_host?: string; model_label?: string; expires_at?: string };
 export type ProviderSessionState = { query: ProviderSessionProfile | null; extraction: ProviderSessionProfile | null };
 export type UniverseSearchResult = { id: string; kind: string; label: string; description: string; score?: number; conceptId?: string; predicate?: string; snapshotId: string };
@@ -29,6 +34,8 @@ export interface UiGatewayClient {
   getCapabilities(): Promise<InspectorCapabilities>;
   getProviderSession(): Promise<ProviderSessionState>;
   saveProviderSession(purpose: "query" | "extraction", profile: { provider_type: string; base_url: string; model_id: string; api_key: string }): Promise<ProviderSessionProfile>;
+  copyQueryProviderToExtraction(): Promise<ProviderSessionProfile>;
+  testProviderSession(purpose: "query" | "extraction"): Promise<{ ok: boolean; message?: string }>;
   deleteProviderSession(purpose: "query" | "extraction"): Promise<void>;
   createConversation(title?: string): Promise<QueryConversation>;
   listConversations(includeArchived?: boolean): Promise<QueryConversation[]>;
@@ -117,10 +124,12 @@ export const fixtureGateway: UiGatewayClient = {
   async searchUniverse({ query, snapshotId, limit = 20 }) { const needle = query.toLocaleLowerCase(); const results = fixtureUniverse.nodes.filter((node) => `${node.label} ${node.labelEn}`.toLocaleLowerCase().includes(needle)).slice(0, limit).map((node) => ({ id: node.id, kind: "concept", label: node.label, description: node.description, snapshotId })); if (!results.length) results.push({ id: `search:${query}`, kind: "entity", label: query, description: "Search result", snapshotId }); return { snapshotId, results, count: results.length }; },
   async getPreferences() { return fixturePreferences.get("demo") ?? { revision: 0, mode: "universe", locale: "zh-CN", theme: "dark" }; },
   async savePreferences(value) { const next = { ...value, revision: value.revision + 1 }; fixturePreferences.set("demo", next); return next; },
-  async getQueryOptions() { return { provider_sets: [{ provider_set_id: "fixture", label: "Fixture", execution_mode: "deterministic" }], snapshot: { snapshot_id: fixtureUniverse.snapshotId, ontology_version: fixtureUniverse.ontologyVersion } }; },
-  async getCapabilities() { return { universe: { enabled: true }, evidence: { enabled: true }, ingestion: { enabled: true }, query: { enabled: true } }; },
+  async getQueryOptions() { return { provider_sets: [], snapshot: { snapshot_id: fixtureUniverse.snapshotId, ontology_version: fixtureUniverse.ontologyVersion } }; },
+  async getCapabilities() { return { universe: { enabled: true, visible: true, ready: true }, evidence: { enabled: true, visible: true, ready: true }, ingestion: { enabled: true, visible: true, ready: false, provider_required_for_extraction: true }, query: { enabled: true, visible: true, ready: false, provider_required: true, provider_configured: false, reason: "后端入口准备中；配置完成后可使用自备 Provider。" } }; },
   async getProviderSession() { return { query: null, extraction: null }; },
-  async saveProviderSession() { return { configured: true }; },
+  async saveProviderSession() { throw new Error("backend_not_configured: GitHub Pages 预览不会保存 Provider"); },
+  async copyQueryProviderToExtraction() { throw new Error("backend_not_configured: GitHub Pages 预览不会保存 Provider"); },
+  async testProviderSession() { throw new Error("backend_not_configured: GitHub Pages 预览不会调用 Provider"); },
   async deleteProviderSession() {},
   async createConversation(title = "New conversation") { const value: QueryConversation = { conversation_id: `fixture-${Date.now()}-${fixtureConversationCounter++}`, snapshot_id: fixtureUniverse.snapshotId, title, status: "active", created_at: new Date().toISOString(), updated_at: new Date().toISOString(), upstream: { messages: [], runs: [] } }; fixtureConversations.unshift(value); return value; },
   async listConversations() { return fixtureConversations; },

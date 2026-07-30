@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, ChevronRight, FileUp, Loader2, PanelRightOpen, Sparkles, X } from "lucide-react";
+import { CheckCircle2, ChevronRight, FileUp, KeyRound, Loader2, PanelRightOpen, Sparkles, X } from "lucide-react";
 import type { Locale } from "../../app/modes";
 import type { UiGatewayClient } from "../../api/ui-gateway";
 import type { IngestionBatch, IngestionReview, ReviewGraph } from "../../domain/ingestion";
@@ -37,6 +37,12 @@ export function IngestionWizard({ locale, client }: Props) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [activeDocumentId, setActiveDocumentId] = useState("");
+  const [extractionConfigured, setExtractionConfigured] = useState(false);
+  const [providerType, setProviderType] = useState("openai-compatible");
+  const [providerUrl, setProviderUrl] = useState("");
+  const [providerModel, setProviderModel] = useState("");
+  const [providerKey, setProviderKey] = useState("");
+  const [providerNotice, setProviderNotice] = useState("");
   const pollRef = useRef<number | undefined>(undefined);
 
   const refreshDeferred = () => {
@@ -45,6 +51,10 @@ export function IngestionWizard({ locale, client }: Props) {
     }).catch(() => setDeferred([]));
   };
   useEffect(refreshDeferred, [client, step]);
+  useEffect(() => {
+    if (!publicDemo) return;
+    void client.getProviderSession().then((state) => setExtractionConfigured(Boolean(state.extraction?.configured))).catch(() => setExtractionConfigured(false));
+  }, [client]);
 
   useEffect(() => {
     if (step !== "running" || !batch) return undefined;
@@ -70,6 +80,10 @@ export function IngestionWizard({ locale, client }: Props) {
 
   const startRun = async () => {
     if (!file || busy) return;
+    if (publicDemo && !extractionConfigured) {
+      setProviderNotice("请先配置 Extraction Provider；不会上传文件或创建任务。");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -82,6 +96,36 @@ export function IngestionWizard({ locale, client }: Props) {
     } finally {
       setBusy(false);
     }
+  };
+
+  const saveExtractionProvider = async () => {
+    setProviderNotice("");
+    try {
+      await client.saveProviderSession("extraction", { provider_type: providerType, base_url: providerUrl.trim(), model_id: providerModel.trim(), api_key: providerKey });
+      setProviderKey("");
+      setExtractionConfigured(true);
+      setProviderNotice("Extraction Provider 已保存到当前 Session。");
+    } catch (cause) {
+      setProviderNotice(cause instanceof Error ? cause.message : "Extraction Provider 配置失败");
+    }
+  };
+
+  const copyQueryProvider = async () => {
+    setProviderNotice("");
+    try {
+      await client.copyQueryProviderToExtraction();
+      const state = await client.getProviderSession();
+      setExtractionConfigured(Boolean(state.extraction?.configured));
+      setProviderNotice("已从当前 Query Provider 复制 Extraction 配置。");
+    } catch (cause) {
+      setProviderNotice(cause instanceof Error ? cause.message : "无法复制 Query Provider");
+    }
+  };
+
+  const removeExtractionProvider = async () => {
+    await client.deleteProviderSession("extraction");
+    setExtractionConfigured(false);
+    setProviderNotice("Extraction Provider 已删除。");
   };
 
   const resumeBatch = async (item: IngestionBatch) => {
@@ -188,13 +232,24 @@ export function IngestionWizard({ locale, client }: Props) {
         </button>
       </div>
       {error && <div className="login-error" role="alert">{error}</div>}
+      {publicDemo && <div className="provider-panel" role="region" aria-label="Extraction Provider settings">
+        <div className="provider-panel__title"><KeyRound size={14} /> Extraction Provider</div>
+        <p className="composer-hint">公开用户只能查看候选结果；Extraction Provider 仅保存在当前 Session，24 小时后上传数据会清理。</p>
+        {extractionConfigured && <p className="composer-hint">当前 Extraction Provider 已配置。可以替换、删除，或在 Query 页面复制配置。</p>}
+        <label>Provider type<select value={providerType} onChange={(event) => setProviderType(event.target.value)}><option value="openai-compatible">OpenAI-compatible</option></select></label>
+        <label>Base URL<input value={providerUrl} onChange={(event) => setProviderUrl(event.target.value)} placeholder="https://provider.example/v1" autoComplete="off" /></label>
+        <label>Model ID<input value={providerModel} onChange={(event) => setProviderModel(event.target.value)} placeholder="model-id" autoComplete="off" /></label>
+        <label>API Key<input type="password" value={providerKey} onChange={(event) => setProviderKey(event.target.value)} placeholder="仅本次提交使用" autoComplete="new-password" /></label>
+        <div className="provider-panel__actions"><button type="button" className="composer-send" onClick={() => void saveExtractionProvider()} disabled={!providerUrl || !providerModel || !providerKey}>保存</button><button type="button" className="inline-action" onClick={() => void copyQueryProvider()}>使用当前 Query Provider</button>{extractionConfigured && <button type="button" className="inline-action" onClick={() => void removeExtractionProvider()}>删除当前配置</button>}</div>
+        {providerNotice && <div className="login-error" role="status">{providerNotice}</div>}
+      </div>}
 
       {step === "upload" && <div className="ingestion-stage">
         <label className="ingestion-drop">
           <FileUp size={30} />
           <strong>{file ? file.name : t.uploadPrompt}</strong>
           <span>{t.uploadHint}</span>
-          <input type="file" accept=".pdf,.md,.txt" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
+          <input type="file" accept=".pdf,.md,.txt,.csv" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
         </label>
         <div className="ingestion-actions">
           <button type="button" className="primary" disabled={!file || busy} onClick={() => void startRun()}>

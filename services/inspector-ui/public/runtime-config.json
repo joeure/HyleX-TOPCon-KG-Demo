@@ -1,0 +1,6 @@
+{
+  "publicDemo": true,
+  "gatewayBaseUrl": "",
+  "toyDataBaseUrl": "./toy-data",
+  "backendStatus": "preparing"
+}

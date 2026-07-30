@@ -12,14 +12,15 @@ import { IngestionWizard } from "../features/ingestion/IngestionWizard";
 import { SpaceBackdrop } from "../features/universe/SpaceBackdrop";
 import { UniverseExplorer } from "../features/universe/UniverseExplorer";
 import { InspectorLogin } from "../features/auth/InspectorLogin";
+import type { PublicRuntimeConfig } from "../main";
 
 const useFixtures = import.meta.env.VITE_USE_FIXTURES === "true";
-const portalClient: UiGatewayClient = useFixtures
-  ? fixtureGateway
-  : createHttpUiGatewayClient(import.meta.env.VITE_UI_GATEWAY_URL ?? "");
-const remoteGatewayEnabled = !useFixtures;
 
-export default function App() {
+export default function App({ runtimeConfig }: { runtimeConfig: PublicRuntimeConfig }) {
+  const remoteGatewayEnabled = !useFixtures && Boolean(runtimeConfig.gatewayBaseUrl);
+  const portalClient: UiGatewayClient = useMemo(() => remoteGatewayEnabled
+    ? createHttpUiGatewayClient(runtimeConfig.gatewayBaseUrl)
+    : fixtureGateway, [remoteGatewayEnabled, runtimeConfig.gatewayBaseUrl]);
   const [preferences, setPreferences] = useState<PortalPreferences>(readPreferences);
   const [preferenceRevision, setPreferenceRevision] = useState(0);
   const [view, setView] = useState<UniverseView | null>(null);
@@ -33,7 +34,7 @@ export default function App() {
     void portalClient.getSession().then(() => Promise.all([portalClient.getPreferences(), portalClient.getUniverse()])).then(([remotePreferences, remoteView]) => {
       setPreferences(remotePreferences); setPreferenceRevision(remotePreferences.revision); setView(remoteView); setAuthenticated(true); setPreferencesHydrated(true); setAuthReady(true);
     }).catch(() => { setPreferencesHydrated(true); setAuthReady(true); });
-  }, []);
+  }, [portalClient, remoteGatewayEnabled]);
   useEffect(() => {
     if (remoteGatewayEnabled || preferences.mode !== "universe" || view) return;
     void portalClient.getUniverse().then(setView).catch(() => setView(null));
@@ -70,10 +71,11 @@ export default function App() {
   if (remoteGatewayEnabled && authReady && !authenticated) return <div className="portal"><SpaceBackdrop /><InspectorLogin locale={preferences.locale} client={portalClient} onSuccess={() => { setAuthenticated(true); setAuthReady(true); void portalClient.getPreferences().then((value) => { setPreferences(value); setPreferenceRevision(value.revision); }); void portalClient.getUniverse().then(setView); }} /></div>;
   if (remoteGatewayEnabled && !authReady) return <div className="portal"><SpaceBackdrop /><main className="login-layout"><div className="login-loading">{t.online}…</div></main></div>;
   return <div className="portal" data-testid="inspector-dashboard"><SpaceBackdrop /><div className="portal__content">
-    <header className="topbar"><div className="brand"><div className="brand-mark"><Globe2 size={20} /></div><div className="brand-copy"><span className="eyebrow">{t.portal}</span><span className="brand-title">KG-OS · Coating</span></div></div>
+    <header className="topbar"><div className="brand"><div className="brand-mark"><Globe2 size={20} /></div><div className="brand-copy"><span className="eyebrow">{t.portal}</span><span className="brand-title">KG-OS · TOPCon Demo</span></div></div>
       <nav className="mode-switcher" aria-label="Portal modes">{modes.map((mode) => <button key={mode.id} className={`mode-button ${activeMode.id === mode.id ? "active" : ""}`} onClick={() => setPreference("mode", mode.id)}>{preferences.locale === "zh-CN" ? mode.zh : mode.en}</button>)}</nav>
       <div className="topbar__actions"><button className="language-button" onClick={() => setPreference("locale", preferences.locale === "zh-CN" ? "en-US" : "zh-CN")} aria-label={t.language}><Globe2 size={15} /><span>{preferences.locale === "zh-CN" ? "中" : "EN"}</span></button><button className="icon-button" onClick={() => setPreference("theme", preferences.theme === "dark" ? "light" : "dark")} aria-label={t.theme}>{preferences.theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}</button><span className="user-chip"><UserRound size={14} /> {t.userLabel}</span>{remoteGatewayEnabled && <button className="language-button" onClick={() => void signOut()} aria-label={preferences.locale === "zh-CN" ? "退出" : "Sign out"}><LogOut size={15} /><span>{preferences.locale === "zh-CN" ? "退出" : "Sign out"}</span></button>}</div>
     </header>
+    {!remoteGatewayEnabled && <div className="login-error" role="status">GitHub Pages 预览模式：Universe 使用 Synthetic Toy 数据；Query 与 Ingestion 保持可见，连接 VPS 后端后可配置 Provider 并执行。</div>}
     {preferenceError && <div className="login-error" role="status">{preferenceError}</div>}
     {preferences.mode === "universe" && view ? <UniverseExplorer client={portalClient} initialView={view} /> : preferences.mode === "query" ? <QuerySearchShell locale={preferences.locale} client={portalClient} /> : preferences.mode === "ingestion" ? <IngestionWizard locale={preferences.locale} client={portalClient} /> : <main className="login-layout"><div className="login-loading">{t.online}…</div></main>}
     <footer className="bottom-bar"><span>{t.online} · {t.snapshotHint}</span><span><kbd>1</kbd> {modes[0].zh} &nbsp; <kbd>2</kbd> {modes[1].zh} &nbsp; <kbd>3</kbd> {modes[2].zh}</span></footer>

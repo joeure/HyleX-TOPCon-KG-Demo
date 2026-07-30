@@ -14,16 +14,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Assemble static Pages site
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: services/inspector-ui/package-lock.json
+      - name: Build complete Inspector
         run: |
-          mkdir -p _site
-          cp -R pages/* _site/
-          cp -R toy-data _site/toy-data
+          npm ci
+          npm run typecheck
+          VITE_PUBLIC_DEMO=true VITE_GITHUB_PAGES=true npm run build
+          cp -R ../../toy-data dist/toy-data
+          export GATEWAY_URL="${PUBLIC_GATEWAY_URL:-}"
+          if [ -n "$GATEWAY_URL" ]; then export STATUS=ready; else export STATUS=preparing; fi
+          node -e 'const fs=require("fs"); const value={publicDemo:true,gatewayBaseUrl:process.env.GATEWAY_URL||"",toyDataBaseUrl:"./toy-data",backendStatus:process.env.STATUS||"preparing"}; fs.writeFileSync("dist/runtime-config.json", JSON.stringify(value,null,2)+"\n")'
+        working-directory: services/inspector-ui
+        env:
+          PUBLIC_GATEWAY_URL: ${{ vars.PUBLIC_GATEWAY_URL }}
       - uses: actions/configure-pages@v5
         with:
           enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: services/inspector-ui/dist
       - id: deployment
         uses: actions/deploy-pages@v4
