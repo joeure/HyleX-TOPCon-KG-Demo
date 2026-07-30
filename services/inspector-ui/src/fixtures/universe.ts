@@ -1,18 +1,18 @@
 import type { UniverseView } from "../domain/universe";
 
 export const fixtureUniverse: UniverseView = {
-  snapshotId: "snapshot-2026-07-17-01",
-  ontologyVersion: "ontology v0.1",
-  updatedAt: "2026-07-17T09:30:00+08:00",
-  proposalCount: 12,
+  snapshotId: "toy_snapshot_v1",
+  ontologyVersion: "synthetic_ontology_v1",
+  updatedAt: "2026-07-30T00:00:00Z",
+  proposalCount: 1,
   nodes: [
-    { id: "knowledge", label: "知识宇宙", labelEn: "Knowledge Universe", layer: "upper", x: 50, y: 46, size: 32, count: "1,284", description: "连接本体、来源与已发布知识。", color: "#9fe8ff" },
-    { id: "process", label: "工艺过程", labelEn: "Process", layer: "domain", parentId: "knowledge", x: 26, y: 27, size: 21, count: "64", description: "描述涂层制备与控制过程。", color: "#8ea5ff" },
-    { id: "material", label: "材料体系", labelEn: "Material", layer: "domain", parentId: "knowledge", x: 74, y: 28, size: 21, count: "92", description: "材料、配方与组成。", color: "#c4a1ff" },
-    { id: "equipment", label: "设备设施", labelEn: "Equipment", layer: "domain", parentId: "knowledge", x: 20, y: 72, size: 20, count: "38", description: "生产和表征设备。", color: "#69d9c3" },
-    { id: "quality", label: "质量属性", labelEn: "Quality", layer: "domain", parentId: "knowledge", x: 78, y: 70, size: 20, count: "47", description: "性能、缺陷与验收指标。", color: "#ffc57c" },
-    { id: "parameter", label: "关键参数", labelEn: "Parameter", layer: "reference", parentId: "process", x: 37, y: 84, size: 12, count: "210", description: "可追溯的过程参数。", color: "#72aefc" },
-    { id: "evidence", label: "证据来源", labelEn: "Evidence", layer: "reference", parentId: "material", x: 63, y: 84, size: 12, count: "833", description: "支撑知识的原始证据。", color: "#ec8fca" },
+    { id: "knowledge", label: "Synthetic TOPCon Toy", labelEn: "Synthetic TOPCon Toy", layer: "upper", x: 50, y: 46, size: 32, count: "5 concepts", description: "完全虚构的 TOPCon 涂层最小知识宇宙。", color: "#9fe8ff" },
+    { id: "process", label: "Process", labelEn: "Process", layer: "domain", parentId: "knowledge", x: 26, y: 27, size: 21, count: "2", description: "Toy seed-layer pass and cure step.", color: "#8ea5ff" },
+    { id: "material", label: "Material", labelEn: "Material", layer: "domain", parentId: "knowledge", x: 74, y: 28, size: 21, count: "1", description: "ToySilica-A synthetic material.", color: "#c4a1ff" },
+    { id: "equipment", label: "Document", labelEn: "Document", layer: "domain", parentId: "knowledge", x: 20, y: 72, size: 20, count: "1", description: "Synthetic source document.", color: "#69d9c3" },
+    { id: "quality", label: "Property", labelEn: "Property", layer: "domain", parentId: "knowledge", x: 78, y: 70, size: 20, count: "1", description: "Toy film hardness property.", color: "#ffc57c" },
+    { id: "parameter", label: "Parameter", labelEn: "Parameter", layer: "reference", parentId: "process", x: 37, y: 84, size: 12, count: "1", description: "Toy cure temperature.", color: "#72aefc" },
+    { id: "evidence", label: "Evidence", labelEn: "Evidence", layer: "reference", parentId: "material", x: 63, y: 84, size: 12, count: "2 chunks", description: "Synthetic evidence chunks only.", color: "#ec8fca" },
   ],
   edges: [
     { from: "knowledge", to: "process", kind: "inheritance" }, { from: "knowledge", to: "material", kind: "inheritance" }, { from: "knowledge", to: "equipment", kind: "inheritance" }, { from: "knowledge", to: "quality", kind: "inheritance" },
